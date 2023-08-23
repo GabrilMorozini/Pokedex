@@ -1,5 +1,14 @@
+/* Partes do software Bootstrap Icons são sujeitas à licença MIT (https://github.com/twbs/icons/blob/main/LICENSE).
+
+Este projeto utiliza funcionalidades da API PokéAPI, sujeitas à Licença BSD de 3 cláusulas.
+Consulte o aviso de direitos autorais da PokéAPI para mais informações (https://github.com/PokeAPI/pokeapi/blob/master/LICENSE.md)
+*/
+
 const pokemonList = document.getElementById('pokemonList')
 const loadMoreButton = document.getElementById('loadMoreButton')
+const modal = document.getElementById('pokeDetailModal')
+const btnClose = document.getElementById('close')
+
 
 const maxRecords = 151
 const limit = 10
@@ -7,9 +16,9 @@ let offset = 0;
 
 function convertPokemonToLi(pokemon) {
     return `
-        <li class="pokemon ${pokemon.type}">
+        <li class="pokemon ${pokemon.type}" data-id="${pokemon.number}">
             <span class="number">#${pokemon.number}</span>
-            <span class="name">${pokemon.name}</span>
+            <span class="name">${pokemon.name} <span> <i class="bi bi-info-circle"></i></span></span>
 
             <div class="detail">
                 <ol class="types">
@@ -45,3 +54,70 @@ loadMoreButton.addEventListener('click', () => {
         loadPokemonItens(offset, limit)
     }
 })
+
+pokemonList.addEventListener('click', (event) => {
+    const clickedPokemon = event.target.closest('.pokemon');
+    if (clickedPokemon) {
+        const pokemonId = clickedPokemon.getAttribute('data-id');
+        pokeApi.detailsPokeToModal(pokemonId)
+            .then((detailsModal) => {
+                const details = pokemonModal(detailsModal, pokemonId)
+                modal.innerHTML = details
+                modal.classList.remove("dNone");
+                modal.classList.add("dGrid");
+            })
+    }
+});
+
+function pokemonModal(detailsToModal, id) {
+    return `
+            <div id="pokeDetail">
+            <div id="close"><i id="iconClose" class="bi bi-arrow-left-circle"></i></div>
+            <div class="description ${detailsToModal.type}">
+                <img src="${detailsToModal.photo}"
+                    alt="${detailsToModal.name}">
+                <p class="name" >#${id} - ${detailsToModal.name}</p>
+                <ol id="typesModal">
+                ${detailsToModal.types.map((type) => `<li class="type ${type}">${type}</li>`).join('')}
+                </ol>
+            </div>
+            <div id="characteristics">
+                <div>
+                    <h3>${detailsToModal.height} M</h3>
+                    <p>Height</p>
+                </div>
+                <div>
+                    <h3>${detailsToModal.weight} KG</h3>
+                    <p>Weight</p>
+                </div>
+            </div>
+            <div id="stats">
+                <h2>Stats</h2>
+                <div class="red">
+                    <h4>HP</h4>
+                    <p>${detailsToModal.stats[0]}</p>
+                </div>
+                <div class="yellow">
+                    <h4>Attack</h4>
+                    <p>${detailsToModal.stats[1]}</p>
+                </div>
+                <div class="blue">
+                    <h4>Defense</h4>
+                    <p>${detailsToModal.stats[2]}</p>
+                </div>
+            </div>
+            </div>
+        `
+}
+
+modal.addEventListener('click', closeModal)
+try{
+    btnClose.addEventListener('click', closeModal)
+} catch{}
+
+function closeModal(event) {
+    if(event.target.id === "pokeDetailModal" || event.target.id === "close" || event.target.id === "iconClose"){
+        modal.classList.add('dNone');
+        modal.classList.remove('dGrid');
+    }
+}
